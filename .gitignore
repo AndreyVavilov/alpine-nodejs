@@ -1,1 +1,4 @@
 .idea
+.vagrant
+alpine-3.7/output
+alpine-3.7/packer_cache

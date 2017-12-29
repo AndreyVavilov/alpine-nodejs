@@ -1,0 +1,107 @@
+{
+    "variables": {
+        "variant": "minimal",
+        "disk_size": "10240",
+        "mem_size": "1024",
+        "ssh_username": "root",
+        "ssh_password": "vagrant",
+        "root_password": "vagrant",
+        "vagrant_username": "vagrant",
+        "vagrant_password": "vagrant",
+        "box_version": "0.2.1",
+        "headless": "false",
+        "vm_name": "",
+        "vm_description": "Alpine Linux"
+    },
+    "builders": [{
+        "type": "virtualbox-iso",
+        "boot_wait": "30s",
+        "disk_size": "{{user `disk_size`}}",
+        "guest_os_type": "{{user `virtualbox_guest_os_type`}}",
+        "iso_urls": [
+            "./iso/{{user `iso_image`}}",
+            "http://dl-cdn.alpinelinux.org/alpine/v3.7/releases/{{user `cpu`}}/{{user `iso_image`}}"
+        ],
+        "iso_checksum": "{{user `iso_checksum`}}",
+        "iso_checksum_type": "{{user `iso_checksum_type`}}",
+        "ssh_username": "{{user `ssh_username`}}",
+        "ssh_password": "{{user `ssh_password`}}",
+        "ssh_port": 22,
+        "ssh_wait_timeout": "60s",
+        "shutdown_command": "poweroff",
+        "guest_additions_mode": "disable",
+        "virtualbox_version_file": ".vbox_version",
+        "output_directory": "output/{{user `vm_name`}}-{{user `variant`}}-v{{user `box_version`}}-virtualbox",
+        "vm_name": "{{user `vm_name`}}-{{user `variant`}}",
+        "headless": "{{user `headless`}}",
+        "vboxmanage": [
+            [ "modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}" ],
+            [ "modifyvm", "{{.Name}}", "--cpus", "2" ],
+            [ "modifyvm", "{{.Name}}", "--rtcuseutc", "on" ],
+            [ "modifyvm", "{{.Name}}", "--usb", "off" ],
+            [ "modifyvm", "{{.Name}}", "--audio", "none" ]
+        ],
+        "export_opts": [
+            "--manifest",
+            "--vsys", "0",
+            "--description", "{{user `vm_description`}}",
+            "--version", "{{user `box_version`}}"
+        ],
+        "http_directory": ".",
+        "boot_command": [
+            "root<enter><wait>",
+            "/sbin/setup-interfaces -i << EOF<enter>",
+            "auto lo<enter>",
+            "iface lo inet loopback<enter>",
+            "<enter>",
+            "auto eth0<enter>",
+            "iface eth0 inet dhcp<enter>",
+            "<tab>hostname localhost<enter>",
+            "EOF<enter>",
+            "/etc/init.d/networking --quiet start<enter><wait10>",
+            "wget -O /tmp/setup.conf http://{{ .HTTPIP }}:{{ .HTTPPort }}/setup.conf<enter><wait>",
+            "setup-alpine -f /tmp/setup.conf<enter><wait>",
+            "{{user `root_password`}}<enter><wait>",
+            "{{user `root_password`}}<enter><wait>",
+            "<wait10><wait10><wait10><wait10><wait10>",
+            "y<enter>",
+            "<wait10><wait10><wait10><wait10>",
+            "wget -O /tmp/install.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/install.sh<enter><wait>",
+            "sh /tmp/install.sh<enter><wait>"
+        ]
+    }],
+    "provisioners": [{
+        "type": "shell",
+        "scripts": [
+            "./vagrant.sh"
+        ],
+        "environment_vars": [
+            "ROOT_PASSWORD={{user `root_password`}}",
+            "VAGRANT_USERNAME={{user `vagrant_username`}}",
+            "VAGRANT_PASSWORD={{user `vagrant_password`}}"
+        ]
+    }, {
+        "type": "shell",
+        "scripts": [
+            "./nodejs.sh"
+        ]
+    }, {
+        "type": "shell",
+        "start_retry_timeout": "5m",
+        "scripts": [
+            "./disk_cleanup.sh"
+        ]
+    }, {
+        "type": "shell",
+        "scripts": [
+            "./cleanup.sh"
+        ]
+    }],
+    "post-processors": [{
+        "type": "vagrant",
+        "only": ["virtualbox-iso"],
+        "compression_level": 9,
+        "output": "./{{user `vm_name`}}-{{user `variant`}}-v{{user `box_version`}}-{{.Provider}}.box",
+        "vagrantfile_template": "./Vagrantfile.Alpine"
+    }]
+}
