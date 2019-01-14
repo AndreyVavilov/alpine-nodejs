@@ -63,7 +63,7 @@
             "setup-alpine -f /tmp/setup.conf<enter><wait>",
             "{{user `root_password`}}<enter><wait>",
             "{{user `root_password`}}<enter><wait>",
-            "<wait10><wait10><wait10><wait10><wait10>",
+            "<wait10><wait10><wait10>",
             "y<enter>",
             "<wait10><wait10><wait10><wait10>",
             "wget -O /tmp/install.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/install.sh<enter><wait>",
