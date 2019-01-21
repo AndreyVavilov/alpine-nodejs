@@ -11,7 +11,7 @@
         "box_version": "0.2.1",
         "headless": "false",
         "vm_name": "",
-        "vm_description": "Alpine Linux"
+        "vm_description": "Alpine 3.7 Linux"
     },
     "builders": [{
         "type": "virtualbox-iso",
